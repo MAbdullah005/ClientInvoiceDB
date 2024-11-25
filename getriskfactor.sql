@@ -1,18 +1,15 @@
-delimiter $$
-drop procedure if exists make_payment;
-create procedure make_payment
-(
-  invoice_id int,payment_amouth decimal(9,2),payment_date date
-)
-begin
-if payment_amouth<0 then 
-  signal sqlstate '22003'
-  set Message_text='invalid payment amouth';
-  end if;
-update invoices i
-set
- i.payment_total=payment_amouth,
- i.payment_date=payment_date
- where i.invoice_id=invoice_id;
- end $$
- delimiter ;
+CREATE DEFINER=`root`@`localhost` FUNCTION `get_risk_factor_for_client`(
+client_id int
+) RETURNS int
+    READS SQL DATA
+BEGIN
+  declare risk_factor decimal(9,2) default 0;
+  declare invoices_total decimal(9,2);
+  declare invoices_count int;
+  select count(*),sum(invoice_total)
+  into invoices_count,invoices_total	
+  from invoices i
+  where i.client_id=client_id;
+  set risk_factor=invoices_total/invoices_count*5;
+RETURN ifnull(risk	_factor,0);
+END
